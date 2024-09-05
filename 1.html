@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-powered Disaster Reporting Tool</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/ScrollTrigger.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+       
+
+        :root {
+            --primary-color:crimson;
+            --secondary-color: #2e38cc;
+            --text-color: #773232;
+            --bg-color: #f4f4f4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+        }
+
+
+        #map {
+    height: 400px;
+    width: 100%;
+    background-color: #eee;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+
+.alert {
+    background-color: #e74c3c;
+    color: white;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(231, 76, 60, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+    }
+}
+
+/* From Uiverse.io by Allyhere */ 
+.btn-donate {
+  --clr-font-main: hsla(0 0% 20% / 100);
+  --btn-bg-1: orange;
+  --btn-bg-2:rgba(236, 152, 7, 0.919);
+  --btn-bg-color: hsla(360 100% 100% / 1);
+  --radii: 0.5em;
+  cursor: pointer;
+  padding: 0.9em 1.4em;
+  min-width: 120px;
+  min-height: 44px;
+  font-size: var(--size, 1rem);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-weight: 500;
+  transition: 0.8s;
+  background-size: 280% auto;
+  background-image: linear-gradient(325deg, var(--btn-bg-2) 0%, var(--btn-bg-1) 55%, var(--btn-bg-2) 90%);
+  border: none;
+  border-radius: var(--radii);
+  color: var(--btn-bg-color);
+  box-shadow: 0px 0px 20px rgba(71, 184, 255, 0.5), 0px 5px 5px -1px rgba(58, 125, 233, 0.25), inset 4px 4px 8px rgba(175, 230, 255, 0.5), inset -4px -4px 8px rgba(19, 95, 216, 0.35);
+}
+
+.btn-donate:hover {
+  background-position: right top;
+}
+
+.btn-donate:is(:focus, :focus-visible, :active) {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--btn-bg-color), 0 0 0 6px var(--btn-bg-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-donate {
+    transition: linear;
+  }
+}
+
+        nav ul {
+            display: flex;
+            justify-content: space-around;
+            list-style-type: none;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+            font-size:xx-large;
+        }
+
+        nav ul li a:hover {
+            color: var(--secondary-color);
+        }
+        header {
+            background: linear-gradient(135deg, rgba(255, 87, 34, 0.9), rgba(255, 193, 7, 0.9));
+            color: white;
+            
+        }
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('hero.jpg') no-repeat center center/cover;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #27ae60;
+        }
+
+        .phase {
+            padding: 100px 0;
+        }
+
+        .phase h2 {
+            text-align: center;
+            margin-bottom: 50px;
+            font-size: 2.5rem;
+        }
+
+        .phase-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .phase-item {
+            flex-basis: calc(33.333% - 20px);
+            margin-bottom: 40px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .phase-item:hover {
+            transform: translateY(-10px);
+        }
+
+        .phase-item h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .parallax {
+            height: 400px;
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .parallax h2 {
+            color: black;
+            font-size: 3rem;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .phase-item {
+                flex-basis: 100%;
+            }
+        }
+        footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+        }
+
+        footer .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        footer .container nav ul {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        footer .container nav ul li a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 1.2rem;
+        }
+
+        footer .container nav ul li a:hover {
+            text-decoration: underline;
+        }
+
+        footer .social-icons {
+            margin: 15px 0;
+        }
+
+        footer .social-icons a {
+            color: white;
+            margin: 0 10px;
+            font-size: 1.5rem;
+            text-decoration: none;
+        }
+
+        footer .social-icons a:hover {
+            color: var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <ul>
+                <li><a href="title">सहायक</a></li> 
+                <li><a href="home">Home</a></li>
+                <li><a href="report.html">Report</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="aboutus.html">About Us</a></li>
+                <li><a href="contactus.html">Contact Us</a></li>
+                <li><a href="#phase3"><button class="btn-donate">
+                    Donate now
+                </button></a></li>
+                
+            </ul>
+        </nav>
+    </header>
+
+    <section id="hero" class="hero">
+        <div class="container">
+            <img src="logo.png" alt="Description of the image" width="200" height="150">
+
+            <h1>सहायक</h1>
+            <h1>AAPKA SURAKHSHA HAMARA VACHAN</h1>
+            <h2>AI-powered Crowdsourced Disaster Reporting Tool</h2>
+            
+            
+        </div>
+    </section>
+
+    <div class="parallax" style="background-image: url('final.jpg')">
+        <h2>Ongoing Excellence in Disaster Management</h2>
+    </div>
+
+    <main class="container">
+        <section id="home" class="card">
+            <br><br>
+            <h1>Welcome to the Disaster Management System</h1>
+            <p>                
+                Welcome to DisasterDash, your essential partner in preparing for, responding to, and recovering from emergencies and disasters. Harnessing the power of cutting-edge technology, including artificial intelligence (AI), we are dedicated to ensuring your safety and resilience in the face of adversity. Our platform leverages AI algorithms to analyze vast amounts of data, from weather patterns and seismic activity to social media trends and infrastructure vulnerabilities. This predictive capability allows us to anticipate and mitigate risks more effectively, providing early warnings and actionable insights to communities and organizations worldwide. Explore our resources, expert advice, and innovative tools designed to empower you to make informed decisions and navigate crises with confidence.</p>
+        </section>
+
+    <section id="phase1" class="phase">
+        <div class="container">
+            <h2>Research & Planning</h2>
+            <div class="phase-content">
+                <div class="phase-item">
+                    <h3>Study Current Tools</h3>
+                    <p>Analyze platforms like I-REACT to understand their limitations and improve upon them.</p>
+                </div>
+                <div class="phase-item">
+                    <h3>Gather Data Sources</h3>
+                    <p>Collect user reports, weather data, social media feeds, and satellite imagery for comprehensive analysis.</p>
+                </div>
+                <div class="phase-item">
+                    <h3>Expert Consultation</h3>
+                    <p>Work with emergency services to determine their needs and refine legal requirements.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="parallax" style="background-image: url('final.jpg')">
+        <h2>Innovative Design for Rapid Response</h2>
+    </div>
+
+    <section id="phase2" class="phase">
+        <div class="container">
+            <h2>Platform Design</h2>
+            <div class="phase-content">
+                <div class="phase-item">
+                    <h3>User-Friendly App</h3>
+                    <p>Create an intuitive app for quick disaster reporting using photos, videos, and location data.</p>
+                </div>
+                <div class="phase-item">
+                    <h3>Emergency Response Dashboard</h3>
+                    <p>Develop a live map showing reports, with AI analyzing trends and predicting disaster severity.</p>
+                </div>
+                <div class="phase-item">
+                    <h3>Multi-Source Integration</h3>
+                    <p>Implement a system that combines crowdsourced reports with data from IoT sensors, satellites, and official weather services for comprehensive disaster monitoring.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="parallax" style="background-image: url('final.jpg')">
+        <h2>AI-Powered Accuracy and Reliability</h2>
+    </div>
+
+    <section id="phase3" class="phase">
+        <div class="container">
+            <h2>AI Training & Testing</h2>
+            <div class="phase-content">
+                <div class="phase-item">
+                    <h3>AI Model Training</h3>
+                    <p>Use past disaster data to train AI models for improved filtering and threat prediction.</p>
+                </div>
+                <div class="phase-item">
+                    <h3>System Testing</h3>
+                    <p>Simulate disasters to ensure accurate emergency detection and noise filtering.</p>
+                </div>
+                <div class="phase-item">
+                    <h3>Performance Metrics</h3>
+                    <p>Establish key performance indicators to evaluate the effectiveness of the AI models and adjust parameters as needed.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="parallax" style="background-image: url('final.jpg')">
+        <h2>From Local to Global Impact</h2>
+    </div>
+
+    <section id="phase4" class="phase">
+        <div class="container">
+            <h2>Pilot Launch</h2>
+            <div class="phase-content">
+                <div class="phase-item">
+                    <h3>Small-Scale Launch</h3>
+                    <p>Begin with a targeted release in a disaster-prone area to test real-world performance.</p>
+                </div>
+                <div class="phase-item">
+                    <h3>Feedback Collection</h3>
+                    <p>Gather insights from users and responders to enhance app functionality and accuracy.</p>
+                </div>
+                <div class="phase-item">
+                    <h3>Local Partnerships</h3>
+                    <p>Collaborate with local organizations to facilitate smooth implementation and gather community-specific feedback.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="phase5" class="phase">
+        <div class="container">
+            <h2>Full Rollout</h2>
+            <div class="phase-content">
+                <div class="phase-item">
+                    <h3>Global Expansion</h3>
+                    <p>Extend the app worldwide, adapting to various languages and regional requirements.</p>
+                </div>
+                <div class="phase-item">
+                    <h3>Continuous AI Improvement</h3>
+                    <p>Utilize real disaster data to enhance system accuracy and reliability over time.</p>
+                </div>
+                <div class="phase-item">
+                    <h3>Comprehensive Training</h3>
+                    <p>Provide extensive training for emergency responders globally to ensure effective use of the system.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+
+    <section id="phase6" class="phase">
+        <div class="container">
+            <h2>Phase 6: Maintenance & Updates</h2>
+            <div class="phase-content">
+                <div class="phase-item">
+                    <h3>Platform Optimization</h3>
+                    <p>Ensure smooth operation and scalability, especially during major disaster events.</p>
+                </div>
+                <div class="phase-item">
+                    <h3>Reporting & Analysis</h3>
+                    <p>Provide insights to help emergency services improve future response strategies.</p>
+                </div>
+                <div class="phase-item">
+                    <h3>AI Model Updates</h3>
+                    <p>Regularly refine AI models to maintain accuracy and eliminate bias.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        gsap.from('.hero h1', {
+            duration: 1,
+            y: 50,
+            opacity: 0,
+            ease: 'power3.out'
+        });
+
+        gsap.from('.hero p', {
+            duration: 1,
+            y: 50,
+            opacity: 0,
+            ease: 'power3.out',
+            delay: 0.3
+        });
+
+        gsap.from('.hero .btn', {
+            duration: 1,
+            y: 50,
+            opacity: 0,
+            ease: 'power3.out',
+            delay: 0.6
+        });
+
+        gsap.utils.toArray('.phase').forEach(phase => {
+            gsap.from(phase.querySelectorAll('.phase-item'), {
+                scrollTrigger: {
+                    trigger: phase,
+                    start: 'top 80%',
+                    end: 'bottom 20%',
+                    toggleActions: 'play none none reverse'
+                },
+                duration: 0.8,
+                y: 50,
+                opacity: 0,
+                stagger: 0.2,
+                ease: 'power3.out'
+            });
+        });
+
+        gsap.utils.toArray('.parallax').forEach(parallax => {
+            gsap.from(parallax.querySelector('h2'), {
+                scrollTrigger: {
+                    trigger: parallax,
+                    start: 'top 80%',
+                    end: 'bottom 20%',
+                    toggleActions: 'play none none reverse'
+                },
+                duration: 1,
+                y: 50,
+                opacity: 0,
+                ease: 'power3.out'
+            });
+        });
+    </script>
+     <footer>
+        <div class="container">
+            <nav>
+                <ul>
+                    <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                    <li><a href="terms-of-service.html">Terms of Service</a></li>
+                    <li><a href="contactus.html">Contact Us</a></li>
+                </ul>
+            </nav>
+            <div class="social-icons">
+                <a href="https://facebook.com" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://instagram.com" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="https://poe.com/Sahayak1.0">Sahayak ChatBot</a>
+                <iframe src="https://www.google.com/maps/embed?pb=!1m16!1m12!1m3!1d3645922.887338492!2d73.14626516053379!3d26.824949580086393!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!2m1!1sindia%20embedded%20map!5e0!3m2!1sen!2sin!4v1725568294980!5m2!1sen!2sin" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+            <p>&copy; 2024 AI-Based Disaster Management System. All rights reserved.</p>
+        </div>
+    </footer>
+    <script src="1.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
